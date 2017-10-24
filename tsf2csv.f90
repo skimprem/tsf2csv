@@ -7,7 +7,6 @@
 !****************************************************************************
 
 program tsf2csv
-    !use libunisub
     implicit none
 
     character(*), parameter :: version = '1.3'
