@@ -18,6 +18,7 @@ program tsf2csv
     verbose_mode_bl = .false.
     separator_bl = .false.
     separator = ','
+
     if (command_argument_count() == 0) then
         call print_help()
         stop
