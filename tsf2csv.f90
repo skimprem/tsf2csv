@@ -90,10 +90,12 @@ program tsf2csv
     character(*), intent(in), optional :: output_filename
     character(5000) :: string
     character(20) :: data_time
-    integer(4) :: un, i, j, k, run
+    character(1) :: yn = 'y'
+    integer(4) :: un, i, j, k, run, ios
     type(tsftype) :: tsfdata
     type(channel) :: channels(:)
     logical, intent(in) :: verbose_mode
+    logical :: exis
     real(8) :: real_value
 
     allocatable channels
@@ -194,7 +196,25 @@ program tsf2csv
             end if
             if(present(output_filename)) then
                 run = fun()
-                open(run, file = output_filename, action = 'write', status = 'new')
+                open(run, file = output_filename, iostat = ios, action = 'write', status = 'new')
+                if(ios /= 0) then
+                    inquire(file=trim(output_filename),exist=exis)
+                    if(exis) then
+                        call print_error(10, trim(output_filename))
+                        do
+                            read(*, *) yn
+                            if(trim(adjustl(yn)) == 'y' .or. trim(adjustl(yn)) == 'Y') then
+                                close(run)
+                                open(run, file=output_filename, action = 'write', status = 'old')
+                                exit
+                            else if(trim(adjustl(yn)) == 'n' .or. trim(adjustl(yn)) == 'N') then
+                                stop
+                            else
+                                cycle
+                            end if
+                        end do
+                    end if
+                end if
             else
                 run = 6
             end if
@@ -375,12 +395,14 @@ program tsf2csv
                 print '(a,a,a,/)', 'ERROR: No such file "', arg, '"'
             case (8)
                 print '(a,a,a,/)', 'ERROR: No such file "', arg, '"'
-                !call print_help()
                 return
             case (9)
                 print '(a,a,a,/)', 'ERROR: Unrecognized parameter "', arg, '" &
                 in input file'
                 !call print_help()
+                return
+            case (10)
+                print '(a,a,a)', 'WARNING: File "', arg, '" is exist! Overwrite? [y/n]:'
                 return
             case default
                 print '(a,/)', 'ERROR!'
