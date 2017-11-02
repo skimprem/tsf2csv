@@ -59,6 +59,8 @@ program tsf2csv
         end select
     end do
 
+    if(verbose_mode_bl .eqv. .true. .and. outfile_bl .eqv. .false.) verbose_mode_bl = .false.
+
     if(tsfile_bl) then
         inquire(file=tsfile,exist=exis)
         if(exis .eqv. .false.) call print_error(7, trim(adjustl(tsfile)))
@@ -71,6 +73,7 @@ program tsf2csv
     else
         call print_error()
     end if
+
     contains
 
     subroutine tsfreader(input_filename, verbose_mode, separator, output_filename)
