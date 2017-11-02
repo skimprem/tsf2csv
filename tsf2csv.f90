@@ -91,12 +91,13 @@ program tsf2csv
     character(5000) :: string
     character(20) :: data_time
     character(1) :: yn = 'y'
-    integer(4) :: un, i, j, k, run, ios
+    character(*) :: back*22
+    integer(4) :: un, i, j, k, run, ios, step
     type(tsftype) :: tsfdata
     type(channel) :: channels(:)
     logical, intent(in) :: verbose_mode
     logical :: exis
-    real(8) :: real_value
+    real(8) :: real_value, progress, coef
 
     allocatable channels
 
@@ -221,7 +222,15 @@ program tsf2csv
 
             write(run, *) 'date_time', (separator//trim(channels(k)%channel_name), k = 1, tsfdata%channels_number)
             
+            if(verbose_mode) then
+                progress = 0.0
+                write(6, '(1x,a)', advance = 'no') 'In progress... ['
+                step = 2
+                coef = 100.0 / tsfdata%countinfo
+            end if
+
             do k = 1, tsfdata%countinfo
+
                 string = ""
                 read(un, '(a, a)') data_time, string
                 read(string, *) (channels(j)%string, j = 1, tsfdata%channels_number)
@@ -235,7 +244,22 @@ program tsf2csv
                   end if
                 end do
                 write(run, *) trim(data_time), (separator//trim(channels(j)%string), j = 1, tsfdata%channels_number)
+                
+                if(verbose_mode) then
+                    progress = progress + coef
+                    if(progress/step > 1) then
+                        write(6,'(a)', advance = 'no') '='
+                        step = step + 2
+                    end if
+                end if
+
             end do
+
+            if(verbose_mode) then
+                write(6, '(a)') '] 100%'
+                !write(6, '(a)') repeat('=',50)
+            end if
+
             close(run)
 
         end select
@@ -402,7 +426,7 @@ program tsf2csv
                 !call print_help()
                 return
             case (10)
-                print '(a,a,a)', 'WARNING: File "', arg, '" is exist! Overwrite? [y/n]:'
+                write(6, '(1x,a,a,a)', advance = 'no') 'WARNING: File "', arg, '" is exist! Overwrite? [y/n]:'
                 return
             case default
                 print '(a,/)', 'ERROR!'
